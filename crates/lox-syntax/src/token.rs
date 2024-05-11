@@ -156,7 +156,7 @@ impl From<&Token> for TokenKind {
             Token::For => TokenKind::For,
             Token::If => TokenKind::If,
             Token::Nil => TokenKind::Nil,
-            Token::Or => TokenKind::or,
+            Token::Or => TokenKind::Or,
             Token::Print => TokenKind::Print,
             Token::Return => TokenKind::Return,
             Token::Super => TokenKind::Super,
