@@ -13,4 +13,6 @@ path = "crates/lox/main.rs"
 name = "lox"
 
 [workspace]
-members = []
+members = [
+    "crates/lox-syntax"
+]
