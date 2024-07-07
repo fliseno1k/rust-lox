@@ -120,3 +120,9 @@ impl LineOffsets {
         }
     }
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Diagnostic {
+    pub span: Span,
+    pub message: String,
+}
