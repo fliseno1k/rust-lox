@@ -15,7 +15,7 @@ pub enum Token {
     Plus,
     Semicolon,
     Slash,
-    Start,
+    Star,
 
     // One or Two character tokens;
     Bang,
@@ -72,7 +72,7 @@ pub enum TokenKind {
     Plus,
     Semicolon,
     Slash,
-    Start,
+    Star,
 
     // One or Two character tokens;
     Bang,
@@ -136,7 +136,7 @@ impl From<&Token> for TokenKind {
             Token::Plus => TokenKind::Plus,
             Token::Semicolon => TokenKind::Semicolon,
             Token::Slash => TokenKind::Slash,
-            Token::Start => TokenKind::Start,
+            Token::Star => TokenKind::Star,
             Token::Bang => TokenKind::Bang,
             Token::BangEqual => TokenKind::BangEqual,
             Token::Equal => TokenKind::Equal,
@@ -169,6 +169,12 @@ impl From<&Token> for TokenKind {
             Token::UnterminatedString => TokenKind::UnterminatedString,
             Token::Unknown(_) => TokenKind::Unknown,
         }
+    }
+}
+
+impl From<&crate::position::WithSpan<Token>> for TokenKind {
+    fn from(token_with_span: &crate::position::WithSpan<Token>) -> Self {
+        TokenKind::from(&token_with_span.value)
     }
 }
 
