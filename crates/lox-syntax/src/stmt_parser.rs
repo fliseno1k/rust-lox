@@ -16,8 +16,39 @@ fn parse_program(it: &mut Parser) -> Result<Vec<WithSpan<Stmt>>, ()> {
 fn parse_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
     match it.peek() {
         TokenKind::Var => parse_var_declaration(it),
+        TokenKind::Fun => parse_function_declaration(it),
+        TokenKind::Class => parse_class_declaration(it),
+        _ => parse_statement(it),
+    }
+}
+
+fn parse_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
+    match it.peek() {
+        TokenKind::Print => parse_print_statement(it),
         _ => parse_expr_statement(it),
     }
+}
+
+fn parse_class_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
+    let begin_span = it.expect(TokenKind::Class)?;
+    let name = expect_identifier(it)?;
+    let super_class = if it.optionally(TokenKind::Less)? {
+        let name = expect_identifier(it)?;
+        Some(name.clone())
+    } else {
+        None
+    };
+    it.expect(TokenKind::LeftBrace)?;
+    let mut functions: Vec<WithSpan<Stmt>> = vec![];
+    while !it.check(TokenKind::RightBrace) {
+        functions.push(parse_function(it)?);
+    }
+    let end_span = it.expect(TokenKind::RightBrace)?;
+
+    Ok(WithSpan::new(
+        Stmt::Class(name.clone(), super_class, functions),
+        Span::union(begin_span, end_span),
+    ))
 }
 
 fn parse_function_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
@@ -51,16 +82,19 @@ fn parse_function(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
         parse_params(it)?
     } else {
         Vec::new()
-    }
+    };
     it.expect(TokenKind::RightParenthesis)?;
     it.expect(TokenKind::LeftBrace)?;
     let mut body: Vec<WithSpan<Stmt>> = Vec::new();
     while !it.check(TokenKind::RightBrace) {
         body.push(parse_declaration(it)?);
     }
-    let end_span = it.expect(TokenKind::RightBrace)?;
-    Ok(WithSpan::new(Stmt::Function(name.clone(), params, body), Span::union(&name, end_span)))
 
+    let end_span = it.expect(TokenKind::RightBrace)?;
+    Ok(WithSpan::new(
+        Stmt::Function(name.clone(), params, body),
+        Span::union(&name, end_span),
+    ))
 }
 
 fn parse_params(it: &mut Parser) -> Result<Vec<WithSpan<Identifier>>, ()> {
@@ -80,6 +114,17 @@ fn parse_expr_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
 
     let span = Span::union(&expr, end_span);
     Ok(WithSpan::new(Stmt::Expression(Box::new(expr)), span))
+}
+
+fn parse_print_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
+    let begin_token = it.expect(TokenKind::Print)?;
+    let expr = parse_expr(it)?;
+    let end_token = it.expect(TokenKind::Semicolon)?;
+
+    Ok(WithSpan::new(
+        Stmt::Print(Box::new(expr)),
+        Span::union(begin_token, end_token),
+    ))
 }
 
 fn parse_expr(it: &mut Parser) -> Result<WithSpan<Expr>, ()> {
