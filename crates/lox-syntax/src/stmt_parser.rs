@@ -25,6 +25,12 @@ fn parse_declaration(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
 fn parse_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
     match it.peek() {
         TokenKind::Print => parse_print_statement(it),
+        TokenKind::If => parse_if_statement(it),
+        TokenKind::LeftBrace => parse_block_statement(it),
+        TokenKind::While => parse_while_statement(it),
+        TokenKind::Return => parse_return_statement(it),
+        TokenKind::For => parse_for_statement(it),
+        TokenKind::Import => parse_import_statement(it),
         _ => parse_expr_statement(it),
     }
 }
@@ -116,6 +122,31 @@ fn parse_expr_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
     Ok(WithSpan::new(Stmt::Expression(Box::new(expr)), span))
 }
 
+fn parse_if_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
+    let begin_token = it.expect(TokenKind::If)?;
+    it.expect(TokenKind::LeftParenthesis)?;
+    let condition = parse_expr(it)?;
+    it.expect(TokenKind::RightParenthesis)?;
+    let if_stmt = parse_statement(it)?;
+    let mut end_span = if_stmt.span;
+    let mut else_stmt: Option<WithSpan<Stmt>> = None;
+
+    if it.optionally(TokenKind::Else)? {
+        let stmt = parse_statement(it)?;
+        end_span = stmt.span;
+        else_stmt = Some(stmt);
+    }
+
+    Ok(WithSpan::new(
+        Stmt::If(
+            Box::new(condition),
+            Box::new(if_stmt),
+            else_stmt.map(Box::new),
+        ),
+        Span::union_span(begin_token.span, end_span),
+    ))
+}
+
 fn parse_print_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
     let begin_token = it.expect(TokenKind::Print)?;
     let expr = parse_expr(it)?;
@@ -124,6 +155,114 @@ fn parse_print_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
     Ok(WithSpan::new(
         Stmt::Print(Box::new(expr)),
         Span::union(begin_token, end_token),
+    ))
+}
+
+fn parse_block_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
+    let begin_span = it.expect(TokenKind::LeftBrace)?;
+    let mut statements: Vec<WithSpan<Stmt>> = Vec::new();
+    while !it.check(TokenKind::RightBrace) {
+        statements.push(parse_declaration(it)?);
+    }
+    let end_span = it.expect(TokenKind::RightBrace)?;
+    Ok(WithSpan::new(
+        Stmt::Block(statements),
+        Span::union(begin_span, end_span),
+    ))
+}
+
+fn parse_while_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
+    let begin_span = it.expect(TokenKind::While)?;
+    it.expect(TokenKind::LeftParenthesis)?;
+    let condition = parse_expr(it)?;
+    it.expect(TokenKind::RightParenthesis)?;
+    let statement = parse_statement(it)?;
+    let span = Span::union(begin_span, &statement);
+    Ok(WithSpan::new(
+        Stmt::While(Box::new(condition), Box::new(statement)),
+        span,
+    ))
+}
+
+fn parse_for_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
+    it.expect(TokenKind::For)?;
+    it.expect(TokenKind::LeftParenthesis)?;
+    let initializer = match it.peek() {
+        TokenKind::Var => Some(parse_var_declaration(it)?),
+        TokenKind::Semicolon => {
+            it.expect(TokenKind::Semicolon)?;
+            None
+        }
+        _ => Some(parse_expr_statement(it)?),
+    };
+    let condition = if !it.check(TokenKind::Semicolon) {
+        parse_expr(it)?
+    } else {
+        WithSpan::empty(Expr::Boolean(true))
+    };
+    it.expect(TokenKind::Semicolon)?;
+    let increment = if !it.check(TokenKind::RightParenthesis) {
+        Some(parse_expr(it)?)
+    } else {
+        None
+    };
+    it.expect(TokenKind::RightParenthesis)?;
+    let body = parse_statement(it)?;
+
+    // Add increment if it exists
+    let body = match increment {
+        Some(expr) => {
+            let span = expr.span;
+            WithSpan::new(
+                Stmt::Block(vec![
+                    body,
+                    WithSpan::new(Stmt::Expression(Box::new(expr)), span),
+                ]),
+                span,
+            )
+        }
+        None => body,
+    };
+    let span = Span::union(&condition, &body);
+    let body = WithSpan::new(Stmt::While(Box::new(condition), Box::new(body)), span);
+    let body = match initializer {
+        Some(stmt) => {
+            let span = Span::union(&stmt, &body);
+            WithSpan::new(Stmt::Block(vec![stmt, body]), span)
+        }
+        None => body,
+    };
+
+    Ok(body)
+}
+
+fn parse_import_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
+    let begin_span = it.expect(TokenKind::Import)?;
+    let name = expect_string(it)?;
+    let params = if it.check(TokenKind::For) {
+        it.expect(TokenKind::For)?;
+        Some(parse_params(it)?)
+    } else {
+        None
+    };
+    let end_span = it.expect(TokenKind::Semicolon)?;
+
+    Ok(WithSpan::new(
+        Stmt::Import(name, params),
+        Span::union(begin_span, end_span),
+    ))
+}
+
+fn parse_return_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
+    let begin_span = it.expect(TokenKind::Return)?;
+    let mut expr = None;
+    if !it.check(TokenKind::Semicolon) {
+        expr = Some(parse_expr(it)?);
+    }
+    let end_span = it.expect(TokenKind::Semicolon)?;
+    Ok(WithSpan::new(
+        Stmt::Return(expr.map(Box::new)),
+        Span::union(begin_span, end_span),
     ))
 }
 
