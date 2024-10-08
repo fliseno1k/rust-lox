@@ -14,5 +14,9 @@ name = "lox"
 
 [workspace]
 members = [
-    "crates/lox-syntax"
+    "crates/lox-syntax",
+    "crates/lox-mmap",
+    "crates/lox-gc",
+    "crates/lox-vm",
+    "crates/lox",
 ]

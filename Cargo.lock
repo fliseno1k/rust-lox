@@ -3,7 +3,42 @@
 version = 3
 
 [[package]]
+name = "arrayvec"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
+
+[[package]]
+name = "libc"
+version = "0.2.155"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97b3888a4aecf77e811145cadf6eef5901f4782c53886191b2f693f24761847c"
+
+[[package]]
+name = "lox"
+version = "0.1.0"
+
+[[package]]
+name = "lox-gc"
+version = "0.1.0"
+dependencies = [
+ "arrayvec",
+ "lox-mmap",
+]
+
+[[package]]
+name = "lox-mmap"
+version = "0.1.0"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "lox-syntax"
+version = "0.1.0"
+
+[[package]]
+name = "lox-vm"
 version = "0.1.0"
 
 [[package]]

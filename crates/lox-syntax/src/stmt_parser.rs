@@ -4,6 +4,14 @@ use crate::common::*;
 use crate::parser::Parser;
 use crate::position::{Span, WithSpan};
 
+pub fn parse(it: &mut Parser) -> Result<Vec<WithSpan<Stmt>>, ()> {
+    parse_program(it)
+}
+
+fn parse_expr(it: &mut Parser) -> Result<WithSpan<Expr>, ()> {
+    super::expr_parser::parse(it)
+}
+
 fn parse_program(it: &mut Parser) -> Result<Vec<WithSpan<Stmt>>, ()> {
     let mut statements = Vec::new();
     while !it.is_eof() {
@@ -264,12 +272,4 @@ fn parse_return_statement(it: &mut Parser) -> Result<WithSpan<Stmt>, ()> {
         Stmt::Return(expr.map(Box::new)),
         Span::union(begin_span, end_span),
     ))
-}
-
-fn parse_expr(it: &mut Parser) -> Result<WithSpan<Expr>, ()> {
-    super::expr_parser::parse(it)
-}
-
-pub fn parse(it: &mut Parser) -> Result<Vec<WithSpan<Stmt>>, ()> {
-    parse_program(it)
 }

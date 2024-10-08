@@ -6,7 +6,7 @@ pub struct MemoryMap {
 }
 
 impl MemoryMap {
-    pub fn data(self) -> *mut u8 {
+    pub fn data(&self) -> *mut u8 {
         self.data
     }
 }
