@@ -17,6 +17,9 @@ checksum = "97b3888a4aecf77e811145cadf6eef5901f4782c53886191b2f693f24761847c"
 [[package]]
 name = "lox"
 version = "0.1.0"
+dependencies = [
+ "lox-syntax",
+]
 
 [[package]]
 name = "lox-gc"
@@ -39,8 +42,4 @@ version = "0.1.0"
 
 [[package]]
 name = "lox-vm"
-version = "0.1.0"
-
-[[package]]
-name = "rust-lox"
 version = "0.1.0"

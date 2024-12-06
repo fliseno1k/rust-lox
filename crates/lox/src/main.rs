@@ -1,5 +1,7 @@
 use std::{env, fs};
 
+use lox_syntax::parse;
+
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
 
@@ -11,5 +13,5 @@ fn main() {
     let path = args.first().unwrap();
     let data = fs::read_to_string(path).unwrap();
 
-    println!("{}", data);
+    println!("{:?}", parse(&data));
 }

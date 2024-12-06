@@ -1,22 +1,6 @@
-[package]
-name = "rust-lox"
-version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-
-[[bin]]
-bench = false
-path = "crates/lox/main.rs"
-name = "lox"
-
 [workspace]
+resolver = "2"
+
 members = [
-    "crates/lox-syntax",
-    "crates/lox-mmap",
-    "crates/lox-gc",
-    "crates/lox-vm",
-    "crates/lox",
+    "crates/*",
 ]
