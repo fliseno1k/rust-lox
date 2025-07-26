@@ -194,7 +194,6 @@ impl<'a> Lexer<'a> {
         keywords.insert("fun", Token::Fun);
         keywords.insert("if", Token::If);
         keywords.insert("print", Token::Print);
-        keywords.insert("return", Token::Print);
         keywords.insert("return", Token::Return);
         keywords.insert("super", Token::Super);
         keywords.insert("this", Token::This);
@@ -235,6 +234,5 @@ impl<'a> Lexer<'a> {
 }
 
 pub fn tokenize_with_context(buf: &str) -> Vec<WithSpan<Token>> {
-    let mut t = Lexer::new(buf);
-    t.tokenize_with_context()
+    Lexer::new(buf).tokenize_with_context()
 }

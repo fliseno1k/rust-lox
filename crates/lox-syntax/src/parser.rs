@@ -43,10 +43,7 @@ impl<'a> Parser<'a> {
     }
 
     pub fn peek_token(&self) -> &'a WithSpan<Token> {
-        match self.tokens.get(self.cursor) {
-            Some(t) => t,
-            None => &EOF_TOKEN,
-        }
+        self.tokens.get(self.cursor).unwrap_or_else(|| &EOF_TOKEN)
     }
 
     pub fn advance(&mut self) -> &'a WithSpan<Token> {
